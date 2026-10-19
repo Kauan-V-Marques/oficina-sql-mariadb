@@ -1,0 +1,11 @@
+services:
+  mariadb:
+    image: mariadb:11.8
+    container_name: oficina-mariadb
+    environment:
+      MARIADB_ROOT_PASSWORD: oficina
+    ports:
+      - "3306:3306"
+    volumes:
+      # Os scripts rodam em ordem alfabética na primeira subida do container
+      - ./sql:/docker-entrypoint-initdb.d:ro

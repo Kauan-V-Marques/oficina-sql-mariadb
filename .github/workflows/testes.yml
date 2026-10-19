@@ -1,0 +1,35 @@
+name: testes
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_ROOT_PASSWORD: root
+        options: >-
+          --health-cmd "healthcheck.sh --connect --innodb_initialized"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Criar banco
+        run: |
+          for f in sql/0*.sql; do
+            echo "-> $f"
+            docker exec -i ${{ job.services.mariadb.id }} mariadb -uroot -proot < "$f"
+          done
+
+      - name: Testes das regras de negocio
+        run: docker exec -i ${{ job.services.mariadb.id }} mariadb -uroot -proot -N < testes/testes.sql
+
+      - name: Relatorios
+        run: docker exec -i ${{ job.services.mariadb.id }} mariadb -uroot -proot -t < consultas/relatorios.sql
